@@ -422,10 +422,10 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 | C/C++/Fortran | MPI                | Distributed     | Multi-node simulations              |
 | Python        | mpi4py             | Distributed     | Multi-node Python workloads         |
 | Python        | multiprocessing    | Shared          | Single-node task parallelism        |
+| Python        | PyTorch DDP        | Distributed     | Deep learning model training |
 | Python        | Dask / Ray         | Both            | Large data, ML pipelines            |
 | R             | parallel / foreach | Shared          | Embarrassingly parallel R tasks     |
 | MATLAB        | parfor / parpool   | Shared          | Loop-heavy MATLAB computations      |
-| Python        | PyTorch DDP        | Distributed     | Deep learning model training |
 
 ---
 
@@ -433,10 +433,10 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 ### Key Takeaways
 
-1. **Profile first** Find the bottleneck before parallelizing.
-2. **Choose the right level** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
-3. **Communication costs are real** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
-4. **Plan for parallelism** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
+1. **Profile first:** Find the bottleneck before parallelizing.
+2. **Choose the right level:** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
+3. **Communication costs are real:** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
+4. **Plan for parallelism:** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
 
 ### Sample Code Repository
 

@@ -704,6 +704,12 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 </tr>
 <tr>
 <td>Python</td>
+<td>PyTorch DDP</td>
+<td>Distributed</td>
+<td>Deep learning model training</td>
+</tr>
+<tr>
+<td>Python</td>
 <td>Dask / Ray</td>
 <td>Both</td>
 <td>Large data, ML pipelines</td>
@@ -720,22 +726,16 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 <td>Shared</td>
 <td>Loop-heavy MATLAB computations</td>
 </tr>
-<tr>
-<td>Python</td>
-<td>PyTorch DDP</td>
-<td>Distributed</td>
-<td>Deep learning model training</td>
-</tr>
 </tbody>
 </table>
 <hr>
 <h2 id="9-summary-and-resources">9. Summary and Resources</h2>
 <h3 id="key-takeaways">Key Takeaways</h3>
 <ol>
-<li><strong>Profile first</strong> Find the bottleneck before parallelizing.</li>
-<li><strong>Choose the right level</strong> Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.</li>
-<li><strong>Communication costs are real</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
-<li><strong>Plan for parallelism</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
+<li><strong>Profile first:</strong> Find the bottleneck before parallelizing.</li>
+<li><strong>Choose the right level:</strong> Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.</li>
+<li><strong>Communication costs are real:</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
+<li><strong>Plan for parallelism:</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
 </ol>
 <h3 id="sample-code-repository">Sample Code Repository</h3>
 <p>All code shown today is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
