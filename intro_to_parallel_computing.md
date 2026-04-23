@@ -428,7 +428,7 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 ### Sample Code Repository
 
-All code shown today is available at: **[github.com/northeastern-rc-training/Intro-to-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-Parallel-Computing-2026)**
+All code shown today is available at: **[github.com/northeastern-rc-training/Intro-to-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
 Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
 
