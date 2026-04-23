@@ -364,7 +364,6 @@ P = parallel portion (1 - S)
 N = number of processors
 </code></pre>
 <p><strong>Example:</strong> If 10% of your code is serial (<code>S = 0.1</code>), the theoretical maximum speedup is 10x, no matter how many processors you throw at it.</p>
-<p>[GRAPH: Amdahl's Law curve. X-axis: number of processors (1 to 128). Y-axis: speedup. Show 3 lines for S=0.01, S=0.05, S=0.10. All curves flatten out, illustrating the diminishing returns. Label the theoretical max for each.]</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/amdahls_law.png" alt="drawing"/>
 <p><strong>Programming tip:</strong> Always plan out your code first. Check what can be parallelized and what cannot be. Converting completed serial code to parallel version is not a good practice.</p>
 <hr>
@@ -389,7 +388,6 @@ N = number of processors
 <p>When the grid is too large for single node's memory, or you need more cores, we can split the grid across multiple nodes using domain decomposition.</p>
 <p><strong>Domain Decomposition:</strong> The grid is divided into horizontal strips. Each MPI rank owns one strip.</p>
 <p><strong>Halo Exchange (Ghost Zones):</strong> Cells on the boundary of a strip need neighbor data from adjacent strips on other nodes. Before each time step, ranks exchange their boundary rows using <code>MPI_Send</code> and <code>MPI_Recv</code>.</p>
-<p>[DIAGRAM: Simple illustration showing a grid split into 4 horizontal strips, each assigned to a different MPI rank. Highlight the boundary rows (ghost zones) with arrows showing the halo exchange between adjacent ranks.]</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/mpi_halo_exchange.png" alt="drawing"/>
 <p>MPI programming guide can be found in <a href="https://rc-docs.northeastern.edu/en/latest/software/systemwide/mpi.html">RC User Document</a>.</p>
 <h3 id="54-benchmark-results">5.4 Benchmark Results</h3>
@@ -466,7 +464,6 @@ N = number of processors
 </tr>
 </tbody>
 </table>
-<p>[GRAPH: Speedup chart. X-axis: number of cores. Y-axis: speedup. Plot actual speedup (from table above) vs. ideal linear speedup (dashed line). The gap between actual and ideal illustrates communication overhead and Amdahl's Law in practice.]</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/time_comparison.png" alt="drawing"/>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/speedup_comparison.png" alt="drawing"/>
 <p>Things to notice:</p>
@@ -614,7 +611,6 @@ dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 </tr>
 </tbody>
 </table>
-<p>[GRAPH: GPU scaling bar chart. X-axis: configuration (1 GPU, 2 GPU single node, 4 GPU multi-node). Y-axis: wall time in seconds. Include a secondary Y-axis or annotation showing speedup factor.]</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/gpu_time_comparison.png" alt="drawing"/>
 <p>Things to notice:</p>
 <ul>

@@ -130,8 +130,6 @@ N = number of processors
 
 **Example:** If 10% of your code is serial (`S = 0.1`), the theoretical maximum speedup is 10x, no matter how many processors you throw at it.
 
-[GRAPH: Amdahl's Law curve. X-axis: number of processors (1 to 128). Y-axis: speedup. Show 3 lines for S=0.01, S=0.05, S=0.10. All curves flatten out, illustrating the diminishing returns. Label the theoretical max for each.]
-
 <img src="images/amdahls_law.png" alt="drawing"/>
 
 **Programming tip:** Always plan out your code first. Check what can be parallelized and what cannot be. Converting completed serial code to parallel version is not a good practice.
@@ -175,8 +173,6 @@ When the grid is too large for single node's memory, or you need more cores, we 
 
 **Halo Exchange (Ghost Zones):** Cells on the boundary of a strip need neighbor data from adjacent strips on other nodes. Before each time step, ranks exchange their boundary rows using `MPI_Send` and `MPI_Recv`.
 
-[DIAGRAM: Simple illustration showing a grid split into 4 horizontal strips, each assigned to a different MPI rank. Highlight the boundary rows (ghost zones) with arrows showing the halo exchange between adjacent ranks.]
-
 <img src="images/mpi_halo_exchange.png" alt="drawing"/>
 
 MPI programming guide can be found in [RC User Document](https://rc-docs.northeastern.edu/en/latest/software/systemwide/mpi.html).
@@ -198,8 +194,6 @@ Grid size: 10000 x 10000, 500 iterations
 | MPI + OpenMP  | 40 (4 nodes) | 10.0            | 25.1x     |
 | MPI + OpenMP  | 60 (3 nodes) | 6.8            | 36.9x     |
 | MPI + OpenMP  | 80 (4 nodes) | 5.7            | 44.0x     |
-
-[GRAPH: Speedup chart. X-axis: number of cores. Y-axis: speedup. Plot actual speedup (from table above) vs. ideal linear speedup (dashed line). The gap between actual and ideal illustrates communication overhead and Amdahl's Law in practice.]
 
 <img src="images/time_comparison.png" alt="drawing"/>
 <img src="images/speedup_comparison.png" alt="drawing"/>
@@ -336,8 +330,6 @@ Task: Matrix multiplication, 4096 x 4096, 100 iterations
 | Single GPU           | 1    | 11.73         | 1.0x    |
 | Multi-GPU (1 node)   | 2    | 5.48          | 2.1x    |
 | Multi-Node (2 nodes) | 4    | 5.08          | 2.3x    |
-
-[GRAPH: GPU scaling bar chart. X-axis: configuration (1 GPU, 2 GPU single node, 4 GPU multi-node). Y-axis: wall time in seconds. Include a secondary Y-axis or annotation showing speedup factor.]
 
 <img src="images/gpu_time_comparison.png" alt="drawing"/>
 
