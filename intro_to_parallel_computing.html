@@ -162,7 +162,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 </a></strong></p>
 <hr>
 <h2 id="1-why-parallel-computing">1. Why Parallel Computing?</h2>
-<p>Most research workloads (i.e. simulations, data processing, model training) eventually hit a wall: a single CPU core is not fast enough.</p>
+<p>Most research workloads (e.g. simulations, data processing, model training) eventually hit a wall: a single CPU core is not fast enough.</p>
 <p>Parallel computing splits work across multiple processing units so that tasks finish sooner.</p>
 <h3 id="the-pipelining">The Pipelining</h3>
 <p><strong>Serial:</strong> You wash, dry, and fold one load at a time. The next load waits until the first one is completely done.</p>
@@ -350,7 +350,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 <p>Each node has its own physically separated memory. Node A cannot directly read Node B's memory.</p>
 <ul>
 <li>Programs must explicitly send and receive data over the network.</li>
-<li>Standard tool: <strong>MPI</strong> (i.e. OpenMPI, Intel MPI, or MPICH)</li>
+<li>Standard tool: <strong>MPI</strong> (e.g. OpenMPI, Intel MPI, or MPICH)</li>
 <li>Advantage: You can scale across multiple nodes.</li>
 </ul>
 <h3 id="hybrid-approach">Hybrid Approach</h3>
@@ -732,7 +732,7 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 <p>All code shown today is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
 Intro-to-HPC-Scaling-Parallel-Computing-2026
 </a></strong></p>
-<p>Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
+<p>Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
 <h3 id="getting-help">Getting Help</h3>
 <p>Email the Research Computing team at <a href="mailto:rchelp@northeastern.edu">rchelp@northeastern.edu</a>.</p>
 <p>Come to <a href="https://rc.northeastern.edu/getting-help/">office hours</a> hosted on Zoom.</p>

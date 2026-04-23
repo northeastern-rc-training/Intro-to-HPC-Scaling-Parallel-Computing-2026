@@ -36,7 +36,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 
 ## 1. Why Parallel Computing?
 
-Most research workloads (i.e. simulations, data processing, model training) eventually hit a wall: a single CPU core is not fast enough.
+Most research workloads (e.g. simulations, data processing, model training) eventually hit a wall: a single CPU core is not fast enough.
 
 Parallel computing splits work across multiple processing units so that tasks finish sooner.
 
@@ -107,7 +107,7 @@ Multiple CPU cores share the same physical memory (RAM). Any core can access any
 Each node has its own physically separated memory. Node A cannot directly read Node B's memory.
 
 - Programs must explicitly send and receive data over the network.
-- Standard tool: **MPI** (i.e. OpenMPI, Intel MPI, or MPICH)
+- Standard tool: **MPI** (e.g. OpenMPI, Intel MPI, or MPICH)
 - Advantage: You can scale across multiple nodes.
 
 ### Hybrid Approach
