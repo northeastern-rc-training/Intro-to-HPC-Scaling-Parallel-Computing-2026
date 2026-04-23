@@ -74,7 +74,7 @@ Mostly we will focus on data parallelism: splitting a large problem into smaller
 
 Flynn's Taxonomy classifies computing architectures by how instructions and data flow through the system.
 
-Classified as: [----] Instruction [----] Data
+Classified as: [Single/Multiple] Instruction [Single/Multiple] Data
 
 | Type     | Instruction | Data     | Example                      |
 | -------- | ----------- | -------- | ---------------------------- |
@@ -133,6 +133,21 @@ N = number of processors
 **Example:** If 10% of your code is serial (`S = 0.1`), the theoretical maximum speedup is 10x, no matter how many processors you throw at it.
 
 <img src="images/amdahls_law.png" alt="drawing"/>
+
+### Amdahl's Law vs Gustafson's Law
+
+Amdahl's Law assumes the problem size is *fixed*. You are asking: "how much faster can I solve the same problem with more cores?" This is called **strong scaling**. The serial fraction always wins in the end, which is why Amdahl's curves flatten out.
+
+Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is **weak
+scaling**, and it is how most real HPC work gets done.
+
+Gustafson:
+```
+Speedup = S + P × N
+        = N - S × (N - 1)
+```
+
+Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size *fixed* at 10000 x 10000, so it measures **strong scaling**. If we *doubled* the grid every time we doubled the cores, the speedup curve would look much closer to linear.
 
 **Programming tip:** Always plan out your code first. Check what can be parallelized and what cannot be. Converting completed serial code to parallel version is not a good practice.
 
@@ -222,7 +237,7 @@ A CPU is like a few professional chefs preparing for complicated dishes. A GPU i
 
 ### 6.2 How GPU Programs Work (CUDA)
 
-At a high level, a GPU program follows steps:
+At a high level, a GPU program follows these steps:
 
 1. **Allocate** memory on the GPU (`cudaMalloc`)
 2. **Copy** data from CPU to GPU (`cudaMemcpy`: Host to Device)
@@ -336,7 +351,8 @@ Things to notice:
 - Going from 1 to 2 GPUs on the same node can show near-linear speedup due to fast PCIe/NVLink interconnect.
 - Cross-node scaling adds network latency, so the speedup can be less than linear.
 - For real training workloads (not just matrix multiplication), the ratio of computation to communication determines how well multi-node scales.
-- 
+- The jump from 2 to 4 GPUs is minimal. At this size each GPU gets a tiny shard and cross-node sync takes more time than computation. (This could be different depend of the problem size)
+
 ---
 
 ## 8. Parallel Computing in Python, R, and MATLAB
@@ -409,7 +425,7 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 | Python        | Dask / Ray         | Both            | Large data, ML pipelines            |
 | R             | parallel / foreach | Shared          | Embarrassingly parallel R tasks     |
 | MATLAB        | parfor / parpool   | Shared          | Loop-heavy MATLAB computations      |
-| Any           | PyTorch DDP        | GPU distributed | Deep learning model training        |
+| Python        | PyTorch DDP        | Distributed     | Deep learning model training |
 
 ---
 
@@ -417,9 +433,9 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 ### Key Takeaways
 
-1. **Profile first.** Find the bottleneck before parallelizing.
-2. **Choose the right level.** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
-3. **Communication costs are real.** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
+1. **Profile first** Find the bottleneck before parallelizing.
+2. **Choose the right level** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
+3. **Communication costs are real** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
 4. **Plan for parallelism** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
 
 ### Sample Code Repository
