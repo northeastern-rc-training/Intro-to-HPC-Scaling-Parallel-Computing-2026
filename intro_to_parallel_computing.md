@@ -428,7 +428,7 @@ All code shown today is available at: **[
 Intro-to-HPC-Scaling-Parallel-Computing-2026
 ](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
-Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
+Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
 
 ### Getting Help
 
