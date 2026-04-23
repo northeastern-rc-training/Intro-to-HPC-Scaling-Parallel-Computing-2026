@@ -16,7 +16,7 @@ Welcome to the [Research Computing Spring 2026 Training Series](https://rc.north
 
 During the session, we will be exploring how to scale your computation from a single core to multiple GPUs across nodes. We will cover some basic concepts, compare real benchmark results, and testing working codes that you can run on the cluster yourself.
 
-Today this session will cover:
+Today's Agenda:
 
 [1. Why Parallel Computing?](#1-why-parallel-computing)  
 [2. Types of Parallelism (Flynn's Taxonomy)](#2-types-of-parallelism-flynns-taxonomy)  
@@ -28,7 +28,9 @@ Today this session will cover:
 [8. Parallel Computing in Python, R, and MATLAB](#8-parallel-computing-in-python-r-and-matlab)  
 [9. Summary and Resources](#9-summary-and-resources)  
 
-All sample code used in this session is available at: **[github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
+All sample code used in this session is available at **[
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
 ---
 
@@ -83,7 +85,7 @@ Classified as: [----] Instruction [----] Data
 
 For today, the two that matter most:
 
-- **SIMD** is a GPU computing: apply the same task to thousands of data points at once.
+- **SIMD** is GPU computing: apply the same task to thousands of data points at once.
 - **MIMD** is like spreading workload across multiple nodes on the cluster. Each task runs on its own data.
 
 ---
@@ -94,7 +96,7 @@ How processors access memory determines which tools you use.
 
 ### Shared Memory (Single Node)
 
-Multiple CPU cores share the same physical memory (RAM). Any core can access to any memory address.
+Multiple CPU cores share the same physical memory (RAM). Any core can access any memory address.
 
 - Easier to program. No need to manually move data between cores.
 - Standard tool: **OpenMP**
@@ -102,7 +104,7 @@ Multiple CPU cores share the same physical memory (RAM). Any core can access to 
 
 ### Distributed Memory (Multi-Node)
 
-Each node has its own physically separted memory. Node A cannot directly read Node B's memory.
+Each node has its own physically separated memory. Node A cannot directly read Node B's memory.
 
 - Programs must explicitly send and receive data over the network.
 - Standard tool: **MPI** (i.e. OpenMPI, Intel MPI, or MPICH)
@@ -118,7 +120,7 @@ Often, HPC applications use both: MPI across nodes and OpenMP within a node. We 
 
 Not everything can be parallelized. Some parts of your code could be serial (reading data, writing final output, sequential dependencies).
 
-**Amdahl's Law** tells that the maximum speedup is limited by the serial portion of the program:
+**Amdahl's Law** tells us that the maximum speedup is limited by the serial portion of the program:
 
 ```
 Speedup = 1 / (S + P/N)
@@ -190,8 +192,8 @@ Grid size: 10000 x 10000, 500 iterations
 | OpenMP        | 8            | 29.4            | 8.5x     |
 | OpenMP        | 12           | 33.4            | 7.5x     |
 | OpenMP        | 16           | 25.2            | 10.0x     |
-| MPI + OpenMP  | 20 (2 nodes) | 20.0            | 12.5x     |
-| MPI + OpenMP  | 40 (4 nodes) | 10.0            | 25.1x     |
+| OpenMP        | 20           | 20.2            | 12.4x     |
+| MPI + OpenMP  | 40 (2 nodes) | 10.0            | 25.1x     |
 | MPI + OpenMP  | 60 (3 nodes) | 6.8            | 36.9x     |
 | MPI + OpenMP  | 80 (4 nodes) | 5.7            | 44.0x     |
 
@@ -203,8 +205,6 @@ Things to notice:
 - OpenMP scaling within a single node should be relatively efficient since there is no network overhead.
 - MPI scaling introduces communication cost, so the speedup curve will flatten compared to the ideal line.
 - Compare this real result to the Amdahl's Law graph from Section 4.
-
-Full source code (serial, OpenMP, and MPI+OpenMP versions): [GitHub link]
 
 ---
 
@@ -222,7 +222,7 @@ A CPU is like a few professional chefs preparing for complicated dishes. A GPU i
 
 ### 6.2 How GPU Programs Work (CUDA)
 
-At a high level, a GPU program follows three steps:
+At a high level, a GPU program follows steps:
 
 1. **Allocate** memory on the GPU (`cudaMalloc`)
 2. **Copy** data from CPU to GPU (`cudaMemcpy`: Host to Device)
@@ -244,8 +244,6 @@ __global__ void MatMulKernel(float *A, float *B, float *C, int N) {
 Every thread calculates a single element of the output matrix. With a 1024x1024 matrix, that is over a million threads running in parallel.
 
 You may not need to write low level CUDA code for most research workloads. Libraries like PyTorch, CuPy, and RAPIDS handle this for you. But understanding the model helps you understand the workflow better.
-
-Full CUDA source code: [GitHub link]
 
 ---
 
@@ -338,9 +336,7 @@ Things to notice:
 - Going from 1 to 2 GPUs on the same node can show near-linear speedup due to fast PCIe/NVLink interconnect.
 - Cross-node scaling adds network latency, so the speedup can be less than linear.
 - For real training workloads (not just matrix multiplication), the ratio of computation to communication determines how well multi-node scales.
-
-Pytorch code (single GPU): [GitHub]
-
+- 
 ---
 
 ## 8. Parallel Computing in Python, R, and MATLAB
@@ -423,12 +419,14 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 1. **Profile first.** Find the bottleneck before parallelizing.
 2. **Choose the right level.** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
-3. **Communication costs are real.** More nodes does not always mean faster. Communication overhead can dominate if the computation per node is small.
+3. **Communication costs are real.** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
 4. **Plan for parallelism** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
 
 ### Sample Code Repository
 
-All code shown today is available at: **[github.com/northeastern-rc-training/Intro-to-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
+All code shown today is available at: **[
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
 Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
 

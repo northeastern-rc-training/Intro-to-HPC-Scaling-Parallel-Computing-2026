@@ -147,7 +147,7 @@
 <h2 id="introduction-to-parallel-computing">Introduction to Parallel Computing</h2>
 <p>Welcome to the <a href="https://rc.northeastern.edu/research-computing-spring-training/">Research Computing Spring 2026 Training Series</a>!</p>
 <p>During the session, we will be exploring how to scale your computation from a single core to multiple GPUs across nodes. We will cover some basic concepts, compare real benchmark results, and testing working codes that you can run on the cluster yourself.</p>
-<p>Today this session will cover:</p>
+<p>Today's Agenda:</p>
 <p><a href="#1-why-parallel-computing">1. Why Parallel Computing?</a><br>
 <a href="#2-types-of-parallelism-flynns-taxonomy">2. Types of Parallelism (Flynn's Taxonomy)</a><br>
 <a href="#3-shared-vs-distributed-memory">3. Shared vs. Distributed Memory</a><br>
@@ -157,7 +157,9 @@
 <a href="#7-scaling-ml-workloads-with-pytorch">7. Scaling ML Workloads with PyTorch</a><br>
 <a href="#8-parallel-computing-in-python-r-and-matlab">8. Parallel Computing in Python, R, and MATLAB</a><br>
 <a href="#9-summary-and-resources">9. Summary and Resources</a></p>
-<p>All sample code used in this session is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026</a></strong></p>
+<p>All sample code used in this session is available at <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+</a></strong></p>
 <hr>
 <h2 id="1-why-parallel-computing">1. Why Parallel Computing?</h2>
 <p>Most research workloads (i.e. simulations, data processing, model training) eventually hit a wall: a single CPU core is not fast enough.</p>
@@ -331,21 +333,21 @@
 </table>
 <p>For today, the two that matter most:</p>
 <ul>
-<li><strong>SIMD</strong> is a GPU computing: apply the same task to thousands of data points at once.</li>
+<li><strong>SIMD</strong> is GPU computing: apply the same task to thousands of data points at once.</li>
 <li><strong>MIMD</strong> is like spreading workload across multiple nodes on the cluster. Each task runs on its own data.</li>
 </ul>
 <hr>
 <h2 id="3-shared-vs-distributed-memory">3. Shared vs. Distributed Memory</h2>
 <p>How processors access memory determines which tools you use.</p>
 <h3 id="shared-memory-single-node">Shared Memory (Single Node)</h3>
-<p>Multiple CPU cores share the same physical memory (RAM). Any core can access to any memory address.</p>
+<p>Multiple CPU cores share the same physical memory (RAM). Any core can access any memory address.</p>
 <ul>
 <li>Easier to program. No need to manually move data between cores.</li>
 <li>Standard tool: <strong>OpenMP</strong></li>
 <li>Limitation: You are bound by the number of cores and RAM on a single machine.</li>
 </ul>
 <h3 id="distributed-memory-multi-node">Distributed Memory (Multi-Node)</h3>
-<p>Each node has its own physically separted memory. Node A cannot directly read Node B's memory.</p>
+<p>Each node has its own physically separated memory. Node A cannot directly read Node B's memory.</p>
 <ul>
 <li>Programs must explicitly send and receive data over the network.</li>
 <li>Standard tool: <strong>MPI</strong> (i.e. OpenMPI, Intel MPI, or MPICH)</li>
@@ -356,7 +358,7 @@
 <hr>
 <h2 id="4-the-speed-limit-amdahls-law">4. The Speed Limit: Amdahl's Law</h2>
 <p>Not everything can be parallelized. Some parts of your code could be serial (reading data, writing final output, sequential dependencies).</p>
-<p><strong>Amdahl's Law</strong> tells that the maximum speedup is limited by the serial portion of the program:</p>
+<p><strong>Amdahl's Law</strong> tells us that the maximum speedup is limited by the serial portion of the program:</p>
 <pre><code>Speedup = 1 / (S + P/N)
 
 S = serial portion
@@ -439,14 +441,14 @@ N = number of processors
 <td>10.0x</td>
 </tr>
 <tr>
-<td>MPI + OpenMP</td>
-<td>20 (2 nodes)</td>
-<td>20.0</td>
-<td>12.5x</td>
+<td>OpenMP</td>
+<td>20</td>
+<td>20.2</td>
+<td>12.4x</td>
 </tr>
 <tr>
 <td>MPI + OpenMP</td>
-<td>40 (4 nodes)</td>
+<td>40 (2 nodes)</td>
 <td>10.0</td>
 <td>25.1x</td>
 </tr>
@@ -472,7 +474,6 @@ N = number of processors
 <li>MPI scaling introduces communication cost, so the speedup curve will flatten compared to the ideal line.</li>
 <li>Compare this real result to the Amdahl's Law graph from Section 4.</li>
 </ul>
-<p>Full source code (serial, OpenMP, and MPI+OpenMP versions): [GitHub link]</p>
 <hr>
 <h2 id="6-gpu-computing">6. GPU Computing</h2>
 <h3 id="61-cpu-vs-gpu-architecture">6.1 CPU vs. GPU Architecture</h3>
@@ -504,7 +505,7 @@ N = number of processors
 </table>
 <p>A CPU is like a few professional chefs preparing for complicated dishes. A GPU is like a thousand line cooks each doing a simple task simultaneously to prepare for a buffet.</p>
 <h3 id="62-how-gpu-programs-work-cuda">6.2 How GPU Programs Work (CUDA)</h3>
-<p>At a high level, a GPU program follows three steps:</p>
+<p>At a high level, a GPU program follows steps:</p>
 <ol>
 <li><strong>Allocate</strong> memory on the GPU (<code>cudaMalloc</code>)</li>
 <li><strong>Copy</strong> data from CPU to GPU (<code>cudaMemcpy</code>: Host to Device)</li>
@@ -521,7 +522,6 @@ N = number of processors
 </code></pre>
 <p>Every thread calculates a single element of the output matrix. With a 1024x1024 matrix, that is over a million threads running in parallel.</p>
 <p>You may not need to write low level CUDA code for most research workloads. Libraries like PyTorch, CuPy, and RAPIDS handle this for you. But understanding the model helps you understand the workflow better.</p>
-<p>Full CUDA source code: [GitHub link]</p>
 <hr>
 <h2 id="7-scaling-ml-workloads-with-pytorch">7. Scaling ML Workloads with PyTorch</h2>
 <h3 id="71-single-gpu">7.1 Single GPU</h3>
@@ -617,8 +617,8 @@ dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 <li>Going from 1 to 2 GPUs on the same node can show near-linear speedup due to fast PCIe/NVLink interconnect.</li>
 <li>Cross-node scaling adds network latency, so the speedup can be less than linear.</li>
 <li>For real training workloads (not just matrix multiplication), the ratio of computation to communication determines how well multi-node scales.</li>
+<li></li>
 </ul>
-<p>Pytorch code (single GPU): [GitHub]</p>
 <hr>
 <h2 id="8-parallel-computing-in-python-r-and-matlab">8. Parallel Computing in Python, R, and MATLAB</h2>
 <p>You do not always need C/C++/CUDA to use parallel computing. Here are common tools for research languages.</p>
@@ -725,11 +725,13 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 <ol>
 <li><strong>Profile first.</strong> Find the bottleneck before parallelizing.</li>
 <li><strong>Choose the right level.</strong> Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.</li>
-<li><strong>Communication costs are real.</strong> More nodes does not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
+<li><strong>Communication costs are real.</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
 <li><strong>Plan for parallelism</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
 </ol>
 <h3 id="sample-code-repository">Sample Code Repository</h3>
-<p>All code shown today is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">github.com/northeastern-rc-training/Intro-to-Parallel-Computing-2026</a></strong></p>
+<p>All code shown today is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+</a></strong></p>
 <p>Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
 <h3 id="getting-help">Getting Help</h3>
 <p>Email the Research Computing team at <a href="mailto:rchelp@northeastern.edu">rchelp@northeastern.edu</a>.</p>
