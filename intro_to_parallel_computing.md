@@ -159,7 +159,9 @@ Conway's Game of Life is a 2D grid simulation where each cell's next state depen
 
 The rules can be found in [Wikipedia page](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
 
+
 <img src="images/Gospers_glider_gun.gif" alt="drawing" border="1"/>
+<img src="images/gol.png" alt="drawing" width=50%/>
 
 It is embarrassingly parallel because every cell calculation is independent within a single time step.
 
