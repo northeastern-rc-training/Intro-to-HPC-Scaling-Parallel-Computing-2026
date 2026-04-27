@@ -379,7 +379,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 </tr>
 </tbody>
 </table>
-<p>These two multiply together. <code>--ntasks-per-node=4</code> with <code>--cpus-per-task=5</code> requests 4 independent processes per node, each with 5 cores — 20 cores per node total.</p>
+<p>These two multiply together. <code>--ntasks-per-node=4</code> with <code>--cpus-per-task=5</code> requests 4 independent processes per node, each with 5 cores which leads 20 cores per node total.</p>
 <p>Think of it this way: <code>ntasks</code> is how many workers you hire. <code>cpus-per-task</code> is how many hands each worker has. Pure OpenMP needs one worker with many hands (<code>ntasks=1</code>, <code>cpus-per-task=N</code>). Pure MPI needs many workers each with one hand (<code>ntasks=N</code>, <code>cpus-per-task=1</code>). Hybrid splits the difference.</p>
 <hr>
 <h2 id="4-the-speed-limit-amdahls-law">4. The Speed Limit: Amdahl's Law</h2>
