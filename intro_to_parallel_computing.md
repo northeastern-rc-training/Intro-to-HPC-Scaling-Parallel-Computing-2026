@@ -114,6 +114,19 @@ Each node has its own physically separated memory. Node A cannot directly read N
 
 Often, HPC applications use both: MPI across nodes and OpenMP within a node. We will see this with the example later.
 
+### Mapping to Slurm: `--ntasks` vs `--cpus-per-task`
+
+When submitting a job, two options control how resources are allocated:
+
+| Option | Controls | Use for |
+|---|---|---|
+| `--ntasks` or `--ntasks-per-node` | Number of MPI processes | Distributed (multi-node) work |
+| `--cpus-per-task` | CPU cores per process | Threads within one process (OpenMP) |
+
+These two multiply together. `--ntasks-per-node=4` with `--cpus-per-task=5` requests 4 independent processes per node, each with 5 cores — 20 cores per node total.
+
+Think of it this way: `ntasks` is how many workers you hire. `cpus-per-task` is how many hands each worker has. Pure OpenMP needs one worker with many hands (`ntasks=1`, `cpus-per-task=N`). Pure MPI needs many workers each with one hand (`ntasks=N`, `cpus-per-task=1`). Hybrid splits the difference.
+
 ---
 
 ## 4. The Speed Limit: Amdahl's Law
@@ -138,16 +151,13 @@ N = number of processors
 
 Amdahl's Law assumes the problem size is *fixed*. You are asking: "how much faster can I solve the same problem with more cores?" This is called **strong scaling**. The serial fraction always wins in the end, which is why Amdahl's curves flatten out.
 
-Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is **weak
-scaling**, and it is how most real HPC work gets done.
+Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is **weak scaling**, and it is how most real HPC work gets done.
 
 Gustafson:
 ```
 Speedup = S + P × N
         = N - S × (N - 1)
 ```
-
-<img src="images/gustafsons_law.png" alt="drawing"/>
 
 Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size *fixed* at 10000 x 10000, so it measures **strong scaling**. If we *doubled* the grid every time we doubled the cores, the speedup curve would look much closer to linear.
 
@@ -157,10 +167,9 @@ Both laws are correct. They just answer different questions. The benchmark in Se
 
 ## 5. CPU Parallelism in Practice: Conway's Game of Life
 
-Conway's Game of Life is a 2D grid simulation where each cell's next state depends on its 8 neighbors. 
+Conway's Game of Life is a 2D grid simulation where each cell's next state depends on its 8 neighbors.
 
 The rules can be found in [Wikipedia page](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life).
-
 
 <img src="images/Gospers_glider_gun.gif" alt="drawing" border="1"/>
 <img src="images/gol.png" alt="drawing" width=50%/>
@@ -186,6 +195,18 @@ for (int i = 1; i <= rows; i++) {
 
 `#pragma omp` directive can be recognized by the compiler, and it handles thread creation and distribution.
 
+To submit an OpenMP job on the cluster:
+
+```bash
+#SBATCH -p short
+#SBATCH -N 1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+./life_openmp --rows 10000 --cols 10000 --gens 500
+```
+
 ### 5.3 MPI + OpenMP (Distributed Memory)
 
 When the grid is too large for single node's memory, or you need more cores, we can split the grid across multiple nodes using domain decomposition.
@@ -198,23 +219,36 @@ When the grid is too large for single node's memory, or you need more cores, we 
 
 MPI programming guide can be found in [RC User Document](https://rc-docs.northeastern.edu/en/latest/software/systemwide/mpi.html).
 
+To submit a hybrid MPI + OpenMP job on the cluster:
+
+```bash
+#SBATCH -p long
+#SBATCH -N 4
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=5
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+mpirun -np $SLURM_NTASKS ./life_mpi_omp --rows 10000 --cols 10000 --gens 500
+```
+
+4 ranks per node × 5 threads per rank × 4 nodes = 80 cores total.
+
 ### 5.4 Benchmark Results
 
 Grid size: 10000 x 10000, 500 iterations
 
-
 | Configuration | Cores        | Wall Time (s) | Speedup |
 | ------------- | ------------ | ------------- | ------- |
-| Serial        | 1            | 250.7            | 1.0x    |
-| OpenMP        | 2            | 116.8            | 2.2x     |
-| OpenMP        | 4            | 58.1            | 4.3x     |
-| OpenMP        | 8            | 29.4            | 8.5x     |
-| OpenMP        | 12           | 33.4            | 7.5x     |
-| OpenMP        | 16           | 25.2            | 10.0x     |
-| OpenMP        | 20           | 20.2            | 12.4x     |
-| MPI + OpenMP  | 40 (2 nodes) | 10.0            | 25.1x     |
-| MPI + OpenMP  | 60 (3 nodes) | 6.8            | 36.9x     |
-| MPI + OpenMP  | 80 (4 nodes) | 5.7            | 44.0x     |
+| Serial        | 1            | 250.7         | 1.0x    |
+| OpenMP        | 2            | 116.8         | 2.2x    |
+| OpenMP        | 4            | 58.1          | 4.3x    |
+| OpenMP        | 8            | 29.4          | 8.5x    |
+| OpenMP        | 12           | 33.4          | 7.5x    |
+| OpenMP        | 16           | 25.2          | 10.0x   |
+| OpenMP        | 20           | 20.2          | 12.4x   |
+| MPI + OpenMP  | 40 (2 nodes) | 10.0          | 25.1x   |
+| MPI + OpenMP  | 60 (3 nodes) | 6.8           | 36.9x   |
+| MPI + OpenMP  | 80 (4 nodes) | 5.7           | 44.0x   |
 
 <img src="images/time_comparison.png" alt="drawing"/>
 <img src="images/speedup_comparison.png" alt="drawing"/>
@@ -281,6 +315,18 @@ b = torch.randn(4096, 4096, device=device)
 c = torch.matmul(a, b)  # runs on GPU automatically
 ```
 
+To submit a single GPU job on the cluster:
+
+```bash
+#SBATCH -N 1
+#SBATCH --gres=gpu:1
+#SBATCH --partition=gpu
+
+module load miniconda3
+source activate pytorch_env
+python single_gpu.py
+```
+
 ### 7.2 Multi-GPU (Single Node)
 
 When you need more than one GPU, PyTorch can split one large operation across multiple GPUs on the same node. The example below partitions matrix A by rows and computes each block on a different GPU in parallel.
@@ -306,6 +352,16 @@ c_shards = [torch.matmul(a, b) for a, b in shards]
 # Wait for all GPUs to finish
 for i in range(num_gpus):
     torch.cuda.synchronize(i)
+```
+
+To submit a multi-GPU job on the cluster:
+
+```bash
+#SBATCH -N 1
+#SBATCH --gres=gpu:2
+#SBATCH --partition=multigpu
+
+python multi_gpu.py
 ```
 
 ### 7.3 Multi-Node Distributed Training
@@ -335,12 +391,11 @@ dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 # If tensor == world_size, all GPUs are communicating correctly
 ```
 
-`all_reduce` is the GPU equivalent of the MPI halo exchange concept: every GPU contributes its value, and the result is shared across all GPUs.
+`all_reduce` is the GPU equivalent of MPI collective operations: every GPU contributes its value, and the result is shared across all GPUs.
 
 ### 7.4 GPU Benchmark Results
 
 Task: Matrix multiplication, 4096 x 4096, 100 iterations
-
 
 | Configuration        | GPUs | Wall Time (s) | Speedup |
 | -------------------- | ---- | ------------- | ------- |
@@ -355,7 +410,7 @@ Things to notice:
 - Going from 1 to 2 GPUs on the same node can show near-linear speedup due to fast PCIe/NVLink interconnect.
 - Cross-node scaling adds network latency, so the speedup can be less than linear.
 - For real training workloads (not just matrix multiplication), the ratio of computation to communication determines how well multi-node scales.
-- The jump from 2 to 4 GPUs is minimal. At this size each GPU gets a tiny shard and cross-node sync takes more time than computation. (This could be different depend of the problem size)
+- The jump from 2 to 4 GPUs is minimal. At this size each GPU gets a tiny shard and cross-node sync takes more time than computation. This could be different depending on the problem size.
 
 ---
 
@@ -420,16 +475,16 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 ### 8.4 Choosing the Right Tool
 
-| Language      | Tool               | Memory Model    | Best For                            |
-| ------------- | ------------------ | --------------- | ----------------------------------- |
-| C/C++/Fortran | OpenMP             | Shared          | Loop-level parallelism, single node |
-| C/C++/Fortran | MPI                | Distributed     | Multi-node simulations              |
-| Python        | mpi4py             | Distributed     | Multi-node Python workloads         |
-| Python        | multiprocessing    | Shared          | Single-node task parallelism        |
-| Python        | PyTorch DDP        | Distributed     | Deep learning model training |
-| Python        | Dask / Ray         | Both            | Large data, ML pipelines            |
-| R             | parallel / foreach | Shared          | Embarrassingly parallel R tasks     |
-| MATLAB        | parfor / parpool   | Shared          | Loop-heavy MATLAB computations      |
+| Language      | Tool               | Memory Model | Best For                            |
+| ------------- | ------------------ | ------------ | ----------------------------------- |
+| C/C++/Fortran | OpenMP             | Shared       | Loop-level parallelism, single node |
+| C/C++/Fortran | MPI                | Distributed  | Multi-node simulations              |
+| Python        | mpi4py             | Distributed  | Multi-node Python workloads         |
+| Python        | multiprocessing    | Shared       | Single-node task parallelism        |
+| Python        | PyTorch DDP        | Distributed  | Deep learning model training        |
+| Python        | Dask / Ray         | Both         | Large data, ML pipelines            |
+| R             | parallel / foreach | Shared       | Embarrassingly parallel R tasks     |
+| MATLAB        | parfor / parpool   | Shared       | Loop-heavy MATLAB computations      |
 
 ---
 
@@ -437,10 +492,10 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 
 ### Key Takeaways
 
-1. **Profile first:** Find the bottleneck before parallelizing.
-2. **Choose the right level:** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
-3. **Communication costs are real:** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
-4. **Plan for parallelism:** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
+1. **Profile first.** Find the bottleneck before parallelizing.
+2. **Choose the right level.** Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.
+3. **Communication costs are real.** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
+4. **Plan for parallelism.** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
 
 ### Submitting Parallel Jobs on the Cluster
 
@@ -472,9 +527,11 @@ python my_training.py
 
 ### Sample Code Repository
 
-Some codes shown today are available at: **[Intro-to-HPC-Scaling-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
+Some of the codes shown today are available at: **[
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
-Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
+Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
 
 ### Getting Help
 

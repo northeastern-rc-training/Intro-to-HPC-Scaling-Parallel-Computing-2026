@@ -356,6 +356,31 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 </ul>
 <h3 id="hybrid-approach">Hybrid Approach</h3>
 <p>Often, HPC applications use both: MPI across nodes and OpenMP within a node. We will see this with the example later.</p>
+<h3 id="mapping-to-slurm---ntasks-vs---cpus-per-task">Mapping to Slurm: <code>--ntasks</code> vs <code>--cpus-per-task</code></h3>
+<p>When submitting a job, two options control how resources are allocated:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Controls</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--ntasks</code> or <code>--ntasks-per-node</code></td>
+<td>Number of MPI processes</td>
+<td>Distributed (multi-node) work</td>
+</tr>
+<tr>
+<td><code>--cpus-per-task</code></td>
+<td>CPU cores per process</td>
+<td>Threads within one process (OpenMP)</td>
+</tr>
+</tbody>
+</table>
+<p>These two multiply together. <code>--ntasks-per-node=4</code> with <code>--cpus-per-task=5</code> requests 4 independent processes per node, each with 5 cores — 20 cores per node total.</p>
+<p>Think of it this way: <code>ntasks</code> is how many workers you hire. <code>cpus-per-task</code> is how many hands each worker has. Pure OpenMP needs one worker with many hands (<code>ntasks=1</code>, <code>cpus-per-task=N</code>). Pure MPI needs many workers each with one hand (<code>ntasks=N</code>, <code>cpus-per-task=1</code>). Hybrid splits the difference.</p>
 <hr>
 <h2 id="4-the-speed-limit-amdahls-law">4. The Speed Limit: Amdahl's Law</h2>
 <p>Not everything can be parallelized. Some parts of your code could be serial (reading data, writing final output, sequential dependencies).</p>
@@ -370,13 +395,11 @@ N = number of processors
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/amdahls_law.png" alt="drawing"/>
 <h3 id="amdahls-law-vs-gustafsons-law">Amdahl's Law vs. Gustafson's Law</h3>
 <p>Amdahl's Law assumes the problem size is <em>fixed</em>. You are asking: &quot;how much faster can I solve the same problem with more cores?&quot; This is called <strong>strong scaling</strong>. The serial fraction always wins in the end, which is why Amdahl's curves flatten out.</p>
-<p>Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is <strong>weak
-scaling</strong>, and it is how most real HPC work gets done.</p>
+<p>Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is <strong>weak scaling</strong>, and it is how most real HPC work gets done.</p>
 <p>Gustafson:</p>
 <pre><code>Speedup = S + P × N
         = N - S × (N - 1)
 </code></pre>
-<img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/gustafsons_law.png" alt="drawing"/>
 <p>Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size <em>fixed</em> at 10000 x 10000, so it measures <strong>strong scaling</strong>. If we <em>doubled</em> the grid every time we doubled the cores, the speedup curve would look much closer to linear.</p>
 <p><strong>Programming tip:</strong> Always plan out your code first. Check what can be parallelized and what cannot be. Converting completed serial code to parallel version is not a good practice.</p>
 <hr>
@@ -398,12 +421,31 @@ scaling</strong>, and it is how most real HPC work gets done.</p>
 }
 </code></pre>
 <p><code>#pragma omp</code> directive can be recognized by the compiler, and it handles thread creation and distribution.</p>
+<p>To submit an OpenMP job on the cluster:</p>
+<pre><code class="language-bash"><span class="hljs-comment">#SBATCH -p short</span>
+<span class="hljs-comment">#SBATCH -N 1</span>
+<span class="hljs-comment">#SBATCH --ntasks=1</span>
+<span class="hljs-comment">#SBATCH --cpus-per-task=20</span>
+
+<span class="hljs-built_in">export</span> OMP_NUM_THREADS=<span class="hljs-variable">$SLURM_CPUS_PER_TASK</span>
+./life_openmp --rows 10000 --cols 10000 --gens 500
+</code></pre>
 <h3 id="53-mpi--openmp-distributed-memory">5.3 MPI + OpenMP (Distributed Memory)</h3>
 <p>When the grid is too large for single node's memory, or you need more cores, we can split the grid across multiple nodes using domain decomposition.</p>
 <p><strong>Domain Decomposition:</strong> The grid is divided into horizontal strips. Each MPI rank owns one strip.</p>
 <p><strong>Halo Exchange (Ghost Zones):</strong> Cells on the boundary of a strip need neighbor data from adjacent strips on other nodes. Before each time step, ranks exchange their boundary rows using <code>MPI_Send</code> and <code>MPI_Recv</code>.</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/mpi_halo_exchange.png" alt="drawing"/>
 <p>MPI programming guide can be found in <a href="https://rc-docs.northeastern.edu/en/latest/software/systemwide/mpi.html">RC User Document</a>.</p>
+<p>To submit a hybrid MPI + OpenMP job on the cluster:</p>
+<pre><code class="language-bash"><span class="hljs-comment">#SBATCH -p long</span>
+<span class="hljs-comment">#SBATCH -N 4</span>
+<span class="hljs-comment">#SBATCH --ntasks-per-node=4</span>
+<span class="hljs-comment">#SBATCH --cpus-per-task=5</span>
+
+<span class="hljs-built_in">export</span> OMP_NUM_THREADS=<span class="hljs-variable">$SLURM_CPUS_PER_TASK</span>
+mpirun -np <span class="hljs-variable">$SLURM_NTASKS</span> ./life_mpi_omp --rows 10000 --cols 10000 --gens 500
+</code></pre>
+<p>4 ranks per node × 5 threads per rank × 4 nodes = 80 cores total.</p>
 <h3 id="54-benchmark-results">5.4 Benchmark Results</h3>
 <p>Grid size: 10000 x 10000, 500 iterations</p>
 <table>
@@ -545,6 +587,15 @@ a = torch.randn(<span class="hljs-number">4096</span>, <span class="hljs-number"
 b = torch.randn(<span class="hljs-number">4096</span>, <span class="hljs-number">4096</span>, device=device)
 c = torch.matmul(a, b)  <span class="hljs-comment"># runs on GPU automatically</span>
 </code></pre>
+<p>To submit a single GPU job on the cluster:</p>
+<pre><code class="language-bash"><span class="hljs-comment">#SBATCH -N 1</span>
+<span class="hljs-comment">#SBATCH --gres=gpu:1</span>
+<span class="hljs-comment">#SBATCH --partition=gpu</span>
+
+module load miniconda3
+<span class="hljs-built_in">source</span> activate pytorch_env
+python single_gpu.py
+</code></pre>
 <h3 id="72-multi-gpu-single-node">7.2 Multi-GPU (Single Node)</h3>
 <p>When you need more than one GPU, PyTorch can split one large operation across multiple GPUs on the same node. The example below partitions matrix A by rows and computes each block on a different GPU in parallel.</p>
 <pre><code class="language-python"><span class="hljs-keyword">import</span> torch
@@ -568,6 +619,13 @@ c_shards = [torch.matmul(a, b) <span class="hljs-keyword">for</span> a, b <span 
 <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(num_gpus):
     torch.cuda.synchronize(i)
 </code></pre>
+<p>To submit a multi-GPU job on the cluster:</p>
+<pre><code class="language-bash"><span class="hljs-comment">#SBATCH -N 1</span>
+<span class="hljs-comment">#SBATCH --gres=gpu:2</span>
+<span class="hljs-comment">#SBATCH --partition=multigpu</span>
+
+python multi_gpu.py
+</code></pre>
 <h3 id="73-multi-node-distributed-training">7.3 Multi-Node Distributed Training</h3>
 <p>In case you are working on large-scale model training across multiple nodes, PyTorch uses Distributed Data Parallel (DDP).</p>
 <p>Key concepts:</p>
@@ -590,7 +648,7 @@ tensor = torch.ones(<span class="hljs-number">1</span>, device=<span class="hljs
 dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 <span class="hljs-comment"># If tensor == world_size, all GPUs are communicating correctly</span>
 </code></pre>
-<p><code>all_reduce</code> is the GPU equivalent of the MPI halo exchange concept: every GPU contributes its value, and the result is shared across all GPUs.</p>
+<p><code>all_reduce</code> is the GPU equivalent of MPI collective operations: every GPU contributes its value, and the result is shared across all GPUs.</p>
 <h3 id="74-gpu-benchmark-results">7.4 GPU Benchmark Results</h3>
 <p>Task: Matrix multiplication, 4096 x 4096, 100 iterations</p>
 <table>
@@ -629,7 +687,7 @@ dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
 <li>Going from 1 to 2 GPUs on the same node can show near-linear speedup due to fast PCIe/NVLink interconnect.</li>
 <li>Cross-node scaling adds network latency, so the speedup can be less than linear.</li>
 <li>For real training workloads (not just matrix multiplication), the ratio of computation to communication determines how well multi-node scales.</li>
-<li>The jump from 2 to 4 GPUs is minimal. At this size each GPU gets a tiny shard and cross-node sync takes more time than computation. (This could be different depend of the problem size)</li>
+<li>The jump from 2 to 4 GPUs is minimal. At this size each GPU gets a tiny shard and cross-node sync takes more time than computation. This could be different depending on the problem size.</li>
 </ul>
 <hr>
 <h2 id="8-parallel-computing-in-python-r-and-matlab">8. Parallel Computing in Python, R, and MATLAB</h2>
@@ -735,10 +793,10 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 <h2 id="9-summary-and-resources">9. Summary and Resources</h2>
 <h3 id="key-takeaways">Key Takeaways</h3>
 <ol>
-<li><strong>Profile first:</strong> Find the bottleneck before parallelizing.</li>
-<li><strong>Choose the right level:</strong> Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.</li>
-<li><strong>Communication costs are real:</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
-<li><strong>Plan for parallelism:</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
+<li><strong>Profile first.</strong> Find the bottleneck before parallelizing.</li>
+<li><strong>Choose the right level.</strong> Shared memory (OpenMP, multiprocessing) for single node, MPI for multi-node, and GPU for data-parallel math.</li>
+<li><strong>Communication costs are real.</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
+<li><strong>Plan for parallelism.</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
 </ol>
 <h3 id="submitting-parallel-jobs-on-the-cluster">Submitting Parallel Jobs on the Cluster</h3>
 <p>Always request resources properly through Slurm:</p>
@@ -765,8 +823,10 @@ mpirun -np <span class="hljs-variable">$SLURM_NTASKS</span> ./my_mpi_program
 python my_training.py
 </code></pre>
 <h3 id="sample-code-repository">Sample Code Repository</h3>
-<p>Some codes shown today are available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">Intro-to-HPC-Scaling-Parallel-Computing-2026</a></strong></p>
-<p>Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
+<p>Some of the codes shown today are available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
+Intro-to-HPC-Scaling-Parallel-Computing-2026
+</a></strong></p>
+<p>Includes: Game of Life (serial, OpenMP, MPI+OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
 <h3 id="getting-help">Getting Help</h3>
 <p>Email the Research Computing team at <a href="mailto:rchelp@northeastern.edu">rchelp@northeastern.edu</a>.</p>
 <p>Come to <a href="https://rc.northeastern.edu/getting-help/">office hours</a> hosted on Zoom.</p>
