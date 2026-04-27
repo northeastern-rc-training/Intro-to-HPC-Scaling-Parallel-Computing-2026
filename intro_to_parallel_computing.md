@@ -20,7 +20,7 @@ Today's Agenda:
 
 [1. Why Parallel Computing?](#1-why-parallel-computing)  
 [2. Types of Parallelism (Flynn's Taxonomy)](#2-types-of-parallelism-flynns-taxonomy)  
-[3. Shared vs. Distributed Memory](#3-shared-vs-distributed-memory)  
+[3. Shared vs. Distributed Memory Model](#3-shared-vs-distributed-memory-model)  
 [4. The Speed Limit: Amdahl's Law](#4-the-speed-limit-amdahls-law)  
 [5. CPU Parallelism in Practice: Conway's Game of Life](#5-cpu-parallelism-in-practice-conways-game-of-life)  
 [6. GPU Computing](#6-gpu-computing)  
@@ -80,7 +80,7 @@ Classified as: [Single/Multiple] Instruction [Single/Multiple] Data
 | -------- | ----------- | -------- | ---------------------------- |
 | **SISD** | Single      | Single   | Traditional single-core CPU  |
 | **SIMD** | Single      | Multiple | GPU cores, vector operations |
-| MISD     | Multiple    | Single   | Rare, fault-tolerant systems |
+| **MISD** | Multiple    | Single   | Rare, fault-tolerant systems |
 | **MIMD** | Multiple    | Multiple | Multi-node HPC clusters      |
 
 For today, the two that matter most:
@@ -90,7 +90,7 @@ For today, the two that matter most:
 
 ---
 
-## 3. Shared vs. Distributed Memory
+## 3. Shared vs. Distributed Memory Model
 
 How processors access memory determines which tools you use.
 
@@ -134,7 +134,7 @@ N = number of processors
 
 <img src="images/amdahls_law.png" alt="drawing"/>
 
-### Amdahl's Law vs Gustafson's Law
+### Amdahl's Law vs. Gustafson's Law
 
 Amdahl's Law assumes the problem size is *fixed*. You are asking: "how much faster can I solve the same problem with more cores?" This is called **strong scaling**. The serial fraction always wins in the end, which is why Amdahl's curves flatten out.
 
@@ -146,6 +146,8 @@ Gustafson:
 Speedup = S + P × N
         = N - S × (N - 1)
 ```
+
+<img src="images/gustafsons_law.png" alt="drawing"/>
 
 Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size *fixed* at 10000 x 10000, so it measures **strong scaling**. If we *doubled* the grid every time we doubled the cores, the speedup curve would look much closer to linear.
 
@@ -440,11 +442,37 @@ Refer [RC MATLAB Guide](https://rc-docs.northeastern.edu/en/latest/software/syst
 3. **Communication costs are real:** More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.
 4. **Plan for parallelism:** Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.
 
+### Submitting Parallel Jobs on the Cluster
+
+Always request resources properly through Slurm:
+
+```bash
+# OpenMP job (single node, 20 cores)
+#SBATCH -N 1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+./my_openmp_program
+
+# MPI + OpenMP job (4 nodes, 4 ranks per node, 5 threads per rank = 80 cores)
+#SBATCH -N 4
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=5
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+mpirun -np $SLURM_NTASKS ./my_mpi_program
+
+# GPU job (single node, 2 GPUs)
+#SBATCH -N 1
+#SBATCH --gres=gpu:2
+
+python my_training.py
+```
+
 ### Sample Code Repository
 
-All code shown today is available at: **[
-Intro-to-HPC-Scaling-Parallel-Computing-2026
-](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
+Some codes shown today are available at: **[Intro-to-HPC-Scaling-Parallel-Computing-2026](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
 Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example
 

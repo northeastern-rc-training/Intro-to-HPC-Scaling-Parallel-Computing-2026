@@ -18,7 +18,8 @@
 }
 
 </style>
-            
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
 <style>
@@ -150,7 +151,7 @@
 <p>Today's Agenda:</p>
 <p><a href="#1-why-parallel-computing">1. Why Parallel Computing?</a><br>
 <a href="#2-types-of-parallelism-flynns-taxonomy">2. Types of Parallelism (Flynn's Taxonomy)</a><br>
-<a href="#3-shared-vs-distributed-memory">3. Shared vs. Distributed Memory</a><br>
+<a href="#3-shared-vs-distributed-memory-model">3. Shared vs. Distributed Memory Model</a><br>
 <a href="#4-the-speed-limit-amdahls-law">4. The Speed Limit: Amdahl's Law</a><br>
 <a href="#5-cpu-parallelism-in-practice-conways-game-of-life">5. CPU Parallelism in Practice: Conway's Game of Life</a><br>
 <a href="#6-gpu-computing">6. GPU Computing</a><br>
@@ -318,7 +319,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 <td>GPU cores, vector operations</td>
 </tr>
 <tr>
-<td>MISD</td>
+<td><strong>MISD</strong></td>
 <td>Multiple</td>
 <td>Single</td>
 <td>Rare, fault-tolerant systems</td>
@@ -337,7 +338,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 <li><strong>MIMD</strong> is like spreading workload across multiple nodes on the cluster. Each task runs on its own data.</li>
 </ul>
 <hr>
-<h2 id="3-shared-vs-distributed-memory">3. Shared vs. Distributed Memory</h2>
+<h2 id="3-shared-vs-distributed-memory-model">3. Shared vs. Distributed Memory Model</h2>
 <p>How processors access memory determines which tools you use.</p>
 <h3 id="shared-memory-single-node">Shared Memory (Single Node)</h3>
 <p>Multiple CPU cores share the same physical memory (RAM). Any core can access any memory address.</p>
@@ -367,7 +368,7 @@ N = number of processors
 </code></pre>
 <p><strong>Example:</strong> If 10% of your code is serial (<code>S = 0.1</code>), the theoretical maximum speedup is 10x, no matter how many processors you throw at it.</p>
 <img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/amdahls_law.png" alt="drawing"/>
-<h3 id="amdahls-law-vs-gustafsons-law">Amdahl's Law vs Gustafson's Law</h3>
+<h3 id="amdahls-law-vs-gustafsons-law">Amdahl's Law vs. Gustafson's Law</h3>
 <p>Amdahl's Law assumes the problem size is <em>fixed</em>. You are asking: &quot;how much faster can I solve the same problem with more cores?&quot; This is called <strong>strong scaling</strong>. The serial fraction always wins in the end, which is why Amdahl's curves flatten out.</p>
 <p>Gustafson's Law asks what happens if you add more cores as you increase the size of the problem. A researcher with 100 cores does not solve a 10-minute problem in 6 seconds, but they solve a problem 100x larger in roughly the same 10 minutes. This is <strong>weak
 scaling</strong>, and it is how most real HPC work gets done.</p>
@@ -375,6 +376,7 @@ scaling</strong>, and it is how most real HPC work gets done.</p>
 <pre><code>Speedup = S + P × N
         = N - S × (N - 1)
 </code></pre>
+<img src="file:////home/gpaik/backup/northeastern/workshop/2026SP/Intro-to-HPC-Scaling-Parallel-Computing-2026/images/gustafsons_law.png" alt="drawing"/>
 <p>Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size <em>fixed</em> at 10000 x 10000, so it measures <strong>strong scaling</strong>. If we <em>doubled</em> the grid every time we doubled the cores, the speedup curve would look much closer to linear.</p>
 <p><strong>Programming tip:</strong> Always plan out your code first. Check what can be parallelized and what cannot be. Converting completed serial code to parallel version is not a good practice.</p>
 <hr>
@@ -738,10 +740,32 @@ results <span class="hljs-operator">&lt;-</span> foreach<span class="hljs-punctu
 <li><strong>Communication costs are real:</strong> More nodes do not always mean faster. Communication overhead can dominate if the computation per node is small.</li>
 <li><strong>Plan for parallelism:</strong> Think about what can be parallelized before writing the code. Retrofitting parallelism to finished serial code is often inefficient.</li>
 </ol>
+<h3 id="submitting-parallel-jobs-on-the-cluster">Submitting Parallel Jobs on the Cluster</h3>
+<p>Always request resources properly through Slurm:</p>
+<pre><code class="language-bash"><span class="hljs-comment"># OpenMP job (single node, 20 cores)</span>
+<span class="hljs-comment">#SBATCH -N 1</span>
+<span class="hljs-comment">#SBATCH --ntasks=1</span>
+<span class="hljs-comment">#SBATCH --cpus-per-task=20</span>
+
+<span class="hljs-built_in">export</span> OMP_NUM_THREADS=<span class="hljs-variable">$SLURM_CPUS_PER_TASK</span>
+./my_openmp_program
+
+<span class="hljs-comment"># MPI + OpenMP job (4 nodes, 4 ranks per node, 5 threads per rank = 80 cores)</span>
+<span class="hljs-comment">#SBATCH -N 4</span>
+<span class="hljs-comment">#SBATCH --ntasks-per-node=4</span>
+<span class="hljs-comment">#SBATCH --cpus-per-task=5</span>
+
+<span class="hljs-built_in">export</span> OMP_NUM_THREADS=<span class="hljs-variable">$SLURM_CPUS_PER_TASK</span>
+mpirun -np <span class="hljs-variable">$SLURM_NTASKS</span> ./my_mpi_program
+
+<span class="hljs-comment"># GPU job (single node, 2 GPUs)</span>
+<span class="hljs-comment">#SBATCH -N 1</span>
+<span class="hljs-comment">#SBATCH --gres=gpu:2</span>
+
+python my_training.py
+</code></pre>
 <h3 id="sample-code-repository">Sample Code Repository</h3>
-<p>All code shown today is available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">
-Intro-to-HPC-Scaling-Parallel-Computing-2026
-</a></strong></p>
+<p>Some codes shown today are available at: <strong><a href="https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026">Intro-to-HPC-Scaling-Parallel-Computing-2026</a></strong></p>
 <p>Includes: Game of Life (serial, OpenMP), CUDA matrix multiplication, and PyTorch (single GPU) example</p>
 <h3 id="getting-help">Getting Help</h3>
 <p>Email the Research Computing team at <a href="mailto:rchelp@northeastern.edu">rchelp@northeastern.edu</a>.</p>
@@ -752,7 +776,7 @@ Intro-to-HPC-Scaling-Parallel-Computing-2026
 <hr>
 <p><em>For questions or support, contact the Research Computing team at <a href="mailto:rchelp@northeastern.edu">rchelp@northeastern.edu</a></em></p>
 
-            
+            <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
             
         </body>
         </html>
