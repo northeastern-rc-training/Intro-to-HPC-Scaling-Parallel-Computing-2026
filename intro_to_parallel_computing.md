@@ -125,7 +125,7 @@ When submitting a job, two options control how resources are allocated:
 
 These two multiply together. `--ntasks-per-node=4` with `--cpus-per-task=5` requests 4 independent processes per node, each with 5 cores which leads 20 cores per node total.
 
-Think of it this way: `ntasks` is how many workers you hire. `cpus-per-task` is how many hands each worker has. Pure OpenMP needs one worker with many hands (`ntasks=1`, `cpus-per-task=N`). Pure MPI needs many workers each with one hand (`ntasks=N`, `cpus-per-task=1`). Hybrid splits the difference.
+`ntasks` controls how many independent processes run (MPI ranks). `cpus-per-task` controls how many CPU cores each process can use for threading. Pure OpenMP: `ntasks=1`, `cpus-per-task=20`. Pure MPI: `ntasks=20`, `cpus-per-task=1`. Hybrid: somewhere in between.
 
 ---
 
