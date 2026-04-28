@@ -28,7 +28,7 @@ Today's Agenda:
 [8. Parallel Computing in Python, R, and MATLAB](#8-parallel-computing-in-python-r-and-matlab)  
 [9. Summary and Resources](#9-summary-and-resources)  
 
-All sample code used in this session is available at **[
+Sample codes used in this session are available at **[
 Intro-to-HPC-Scaling-Parallel-Computing-2026
 ](https://github.com/northeastern-rc-training/Intro-to-HPC-Scaling-Parallel-Computing-2026)**
 
@@ -161,6 +161,8 @@ Gustafson:
 Speedup = S + P × N
         = N - S × (N - 1)
 ```
+
+<img src="images/gustafsons_law.png" alt="drawing"/>
 
 Both laws are correct. They just answer different questions. The benchmark in Section 5.4 holds the grid size *fixed* at 10000 x 10000, so it measures **strong scaling**. If we *doubled* the grid every time we doubled the cores, the speedup curve would look much closer to linear.
 
